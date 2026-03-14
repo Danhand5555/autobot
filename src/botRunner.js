@@ -107,7 +107,7 @@ class BotRunner {
     }
 
     // Navigate and wait for domcontentloaded, return false if stopped
-    async goto(url, timeout = 20000) {
+    async goto(url, timeout = 30000) {
         if (this.stopped) return false;
         await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout });
         return !this.stopped;
@@ -180,13 +180,13 @@ class BotRunner {
                     this.log(`Already logged in! (${Date.now() - loginStart}ms)`, 'success');
                 } else {
                     this.log('Filling credentials...', 'info');
-                    await this.page.waitForSelector('input[name="username"]', { timeout: 5000 });
+                    await this.page.waitForSelector('input[name="username"]', { timeout: 15000 });
                     await this.page.evaluate((email, password) => {
                         document.querySelector('input[name="username"]').value = email;
                         document.querySelector('input[name="password"]').value = password;
                     }, config.email, config.password);
                     await this.page.click('button.btn-red.btn-signin');
-                    await this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 12000 });
+                    await this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 });
                     this.log(`Logged in! (${Date.now() - loginStart}ms)`, 'success');
                 }
 
