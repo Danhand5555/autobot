@@ -172,7 +172,7 @@ class BotRunner {
 
                 const redir = encodeURIComponent(config.concertUrl || '/index.html');
                 const loginURL = `https://event.thaiticketmajor.com/user/signin.php?redir=${redir}`;
-                if (!await this.goto(loginURL, 20000)) return;
+                if (!await this.goto(loginURL, 30000)) return;
 
                 const isLoggedIn = !this.page.url().includes('signin');
 
@@ -185,8 +185,39 @@ class BotRunner {
                         document.querySelector('input[name="username"]').value = email;
                         document.querySelector('input[name="password"]').value = password;
                     }, config.email, config.password);
+
+                    // Check for CAPTCHA before clicking login
+                    await this.captchaGuard();
+                    if (this.stopped) return;
+
                     await this.page.click('button.btn-red.btn-signin');
-                    await this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 });
+
+                    // The page may show a CAPTCHA after clicking login instead of navigating
+                    // Use a race: either navigation completes or we detect a CAPTCHA
+                    const navResult = await Promise.race([
+                        this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 })
+                            .then(() => 'navigated')
+                            .catch(() => 'timeout'),
+                        new Promise(resolve => setTimeout(resolve, 5000)).then(() => 'check'),
+                    ]);
+
+                    if (navResult !== 'navigated') {
+                        // Might be stuck on CAPTCHA — try solving it
+                        this.log('Login may need CAPTCHA...', 'warn');
+                        await this.captchaGuard();
+                        if (this.stopped) return;
+                        // After CAPTCHA, the page should navigate — wait again
+                        await this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+                    }
+
+                    // Verify we're actually logged in
+                    const finalUrl = this.page.url();
+                    if (finalUrl.includes('signin')) {
+                        this.log('Login may have failed — retrying...', 'warn');
+                        await this.page.click('button.btn-red.btn-signin').catch(() => {});
+                        await this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+                    }
+
                     this.log(`Logged in! (${Date.now() - loginStart}ms)`, 'success');
                 }
 
