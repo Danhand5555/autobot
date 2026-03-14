@@ -1,0 +1,27 @@
+{
+  "name": "autobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "start:fast": "TTM_FAST_MODE=1 node src/server.js",
+    "bot": "node src/bridge/Dashboard.js",
+    "test:queue": "node test/queue-mock.js",
+    "test:queue:fast": "QUEUE_SECONDS=5 QUEUE_START=50 node test/queue-mock.js",
+    "test:captcha": "node test/captcha-test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@captcha-libs/capsolver": "^2.1.1",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "puppeteer": "^24.37.5",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "socket.io": "^4.8.3"
+  }
+}

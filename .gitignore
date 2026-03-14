@@ -1,0 +1,7 @@
+node_modules/
+browser-data/
+research/
+.env
+.DS_Store
+autobot.log
+*.png
